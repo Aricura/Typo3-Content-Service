@@ -1,0 +1,36 @@
+{
+    "name": "aricura/typo3-content-service",
+    "type": "typo3-bundle",
+    "description": "Integrates a content service for Typo3 models",
+    "keywords": [ "typo3", "integration", "services", "content service", "typo3 models" ],
+    "license": "GPL-3.0+",
+    "authors": [
+        {
+            "name": "Stefan Herndler",
+            "email": "admin@aricura.com"
+        }
+    ],
+    "require": {
+        "php": "^7.1",
+        "typo3/cms": "^8.7"
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-master",
+        "friendsofphp/php-cs-fixer": "^2.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Typo3ContentService\\": ""
+        }
+    },
+    "extra": {
+        "typo3/cms": {
+            "cms-package-dir": "{$vendor-dir}/typo3/cms",
+            "extensions-in-vendor-dir": true,
+            "prepare-web-dir": false
+        },
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    }
+}
