@@ -98,7 +98,7 @@ class Page extends AbstractModel
      *
      * @var string
      */
-    protected $table = 'page';
+    protected $table = 'pages';
 
     /**
      * Column name where the language index of the model is stored in.
