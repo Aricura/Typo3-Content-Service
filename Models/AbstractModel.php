@@ -727,7 +727,8 @@ abstract class AbstractModel
         foreach ($where as $columnName => $value) {
             if (\is_array($value)) {
                 // custom operator is specified
-                [$operator, $realValue] = $value;
+                $operator = $value[0];
+                $realValue = $value[1];
             } else {
                 // default operator will be used
                 $operator = 'eq';
@@ -829,7 +830,7 @@ abstract class AbstractModel
      *
      * @return FileReference|null
      */
-    public function resolveFile(string $columnName): ?FileReference
+    public function resolveFile(string $columnName)
     {
         $files = $this->resolveFiles($columnName);
 
