@@ -198,7 +198,7 @@ abstract class AbstractModel
      *
      * @param ConnectionPool|object $connectionPool
      */
-    public function injectConnectionPool(ConnectionPool $connectionPool): void
+    public function injectConnectionPool(ConnectionPool $connectionPool)
     {
         $this->connectionPool = $connectionPool;
     }
@@ -208,7 +208,7 @@ abstract class AbstractModel
      *
      * @param FileRepository|object $fileRepository
      */
-    public function injectFileRepository(FileRepository $fileRepository): void
+    public function injectFileRepository(FileRepository $fileRepository)
     {
         $this->fileRepository = $fileRepository;
     }
@@ -218,7 +218,7 @@ abstract class AbstractModel
      *
      * @param PageRepository|object $pageRepository
      */
-    public function injectPageRepository(PageRepository $pageRepository): void
+    public function injectPageRepository(PageRepository $pageRepository)
     {
         $this->pageRepository = $pageRepository;
     }
@@ -542,7 +542,7 @@ abstract class AbstractModel
      * @param string $key
      * @param        $value
      */
-    public function setAttribute(string $key, $value): void
+    public function setAttribute(string $key, $value)
     {
         $this->__set($key, $value);
     }
