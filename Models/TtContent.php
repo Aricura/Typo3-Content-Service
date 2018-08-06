@@ -147,16 +147,4 @@ class TtContent extends AbstractModel
     {
         return Page::find($this->getParentKey());
     }
-
-    /**
-     * Injects the specified array into a new model.
-     *
-     * @param array $data
-     *
-     * @return TtContent
-     */
-    public static function inject(array $data): self
-    {
-        return self::mapArrayToModel($data);
-    }
 }

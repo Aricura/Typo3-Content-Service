@@ -704,10 +704,12 @@ abstract class AbstractModel
      * @param string $conjunction optional conjunction when using multiple key-value-pairs (default 'AND')
      * @param int    $offset      optional define an offset as starting index (default 0 = start at the first record)
      * @param int    $limit       optional limit the number of records (default -1 = no limitation)
+     * @param string $sortBy      optional column to sort the results by (default 'sorting' column)
+     * @param string $sortOrder   optional sort order, either ASC or DESC (default ASC)
      *
      * @return array|static[]
      */
-    public static function findAllBy(array $where, string $conjunction = 'AND', $offset = 0, $limit = -1): array
+    public static function findAllBy(array $where, string $conjunction = 'AND', $offset = 0, $limit = -1, $sortBy = 'sorting', $sortOrder = 'ASC'): array
     {
         // unify the conjunction string
         $conjunction = \mb_strtoupper(\trim($conjunction));
@@ -727,15 +729,19 @@ abstract class AbstractModel
         foreach ($where as $columnName => $value) {
             if (\is_array($value)) {
                 // custom operator is specified
-                $operator = $value[0];
+                $operator = \mb_strtolower(\trim($value[0]));
                 $realValue = $value[1];
             } else {
                 // default operator will be used
                 $operator = 'eq';
                 $realValue = $value;
             }
-            // the value is either an integer, double or quoted as string
-            $realValue = \is_int($realValue) || \is_float($realValue) ? $realValue : $builder->quote($realValue);
+
+            // quote strings
+            if (\is_string($realValue)) {
+                $realValue = $builder->quote($realValue);
+            }
+
             $whereClause = $builder->expr()->$operator($columnName, $realValue);
 
             if (0 === $loopCounter) {
@@ -755,6 +761,10 @@ abstract class AbstractModel
 
         if ($limit > 0) {
             $builder->setMaxResults($limit);
+        }
+
+        if ('' !== $sortBy) {
+            $builder->orderBy($sortBy, $sortOrder);
         }
 
         // fetch all table rows matching the specified query and map them to an instance of this model
@@ -806,6 +816,21 @@ abstract class AbstractModel
         $dummy = new static();
 
         return self::findBy($dummy->getKeyColumnName(), $key);
+    }
+
+    /**
+     * Injects the specified array into a new model.
+     *
+     * @param array $data
+     *
+     * @return static
+     */
+    public static function inject(array $data)
+    {
+        $model = self::mapArrayToModel($data);
+        $model->exists = $model->getKey() > 0;
+
+        return $model;
     }
 
     /**
