@@ -1,1 +1,2 @@
-Typo3ContentService
+Typo3-Content-Service
+==============
