@@ -12,6 +12,7 @@
     ],
     "require": {
         "php": "7.*",
+        "symfony/symfony": "^3.3",
         "typo3/cms": "^8.7"
     },
     "require-dev": {
