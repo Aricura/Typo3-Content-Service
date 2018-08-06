@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace Typo3ContentService;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Typo3ContentService\Symfony\EventListener;
@@ -43,9 +44,9 @@ class Typo3ContentServiceBundle extends Bundle
 
         $containerBuilder
             ->register('typo3_content_service_event_listener', EventListener::class)
-            ->addArgument('event_dispatcher')
+            ->addArgument(new Reference('event_dispatcher'))
             ->addTag('kernel.event_listener', [
-                'method' => 'add',
+                'method' => 'addListener',
                 'event' => 'kernel.request',
             ]);
     }
