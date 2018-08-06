@@ -19,11 +19,10 @@ declare(strict_types=1);
 
 namespace Typo3ContentService;
 
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
-use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
-use Symfony\Component\HttpKernel\KernelEvents;
-use Typo3ContentService\Models\AbstractModel;
+use Typo3ContentService\Symfony\EventListener;
 
 class Typo3ContentServiceBundle extends Bundle
 {
@@ -32,32 +31,22 @@ class Typo3ContentServiceBundle extends Bundle
      */
     public function boot()
     {
-        $dispatcher = new EventDispatcher();
-        $dispatcher->addListener(KernelEvents::CONTROLLER, function (FilterControllerEvent $event) {
-            $controller = (array) $event->getController();
-            $data = (array) $event->getRequest()->attributes->get('data');
+    }
 
-            $reflectionMethod = new \ReflectionMethod(\get_class($controller[0]), $controller[1]);
+    /**
+     * {@inheritdoc}
+     */
+    public function build(ContainerBuilder $containerBuilder)
+    {
+        $containerBuilder
+            ->register('event_dispatcher', EventDispatcher::class);
 
-            foreach ($reflectionMethod->getParameters() as $parameter) {
-                $parameterType = $parameter->getType();
-                if (!$parameterType) {
-                    continue;
-                }
-
-                $className = $parameterType->getName();
-                if (!\method_exists($className, 'inject')) {
-                    continue;
-                }
-
-                $reflectionClass = new \ReflectionClass($className);
-                if (!$reflectionClass->isSubclassOf(AbstractModel::class)) {
-                    continue;
-                }
-
-                $event->getRequest()->attributes->set('element', $className::inject($data));
-                break;
-            }
-        });
+        $containerBuilder
+            ->register('typo3_content_service_event_listener', EventListener::class)
+            ->addArgument('event_dispatcher')
+            ->addTag('kernel.event_listener', [
+                'method' => 'add',
+                'event' => 'kernel.request',
+            ]);
     }
 }
