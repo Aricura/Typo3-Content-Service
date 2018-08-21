@@ -695,6 +695,24 @@ abstract class AbstractModel
     }
 
     /**
+     * Returns all inline records of the specified class name (::class) attached to this record.
+     *
+     * @param string $childClassName
+     *
+     * @return array
+     */
+    public function getInlineRecords(string $childClassName): array
+    {
+        /** @var self $childClassName */
+        return $childClassName::findAllBy(
+            [
+                'parent_id' => $this->getKey(),
+                'parent_table' => $this->getTableName(),
+            ]
+        );
+    }
+
+    /**
      * Returns all records which matches the specified key-value-pairs.
      * Soft deleted and hidden models are excluded.
      *
@@ -960,6 +978,9 @@ abstract class AbstractModel
                 return (array) $value;
             case 'string':
                 return (string) $value;
+            case 'bool':
+            case 'boolean':
+                return (bool) $value;
         }
 
         // type cast is specified but unknown (maybe a typo or something like 'object')
