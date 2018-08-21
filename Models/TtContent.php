@@ -137,14 +137,4 @@ class TtContent extends AbstractModel
      * @var string
      */
     protected $table = 'tt_content';
-
-    /**
-     * Returns the page model this content element is used on.
-     *
-     * @return Page
-     */
-    public function getPage(): Page
-    {
-        return Page::find($this->getParentKey());
-    }
 }
