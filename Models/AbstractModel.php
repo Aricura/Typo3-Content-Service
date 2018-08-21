@@ -960,6 +960,9 @@ abstract class AbstractModel
                 return (array) $value;
             case 'string':
                 return (string) $value;
+            case 'bool':
+            case 'boolean':
+                return (bool) $value;
         }
 
         // type cast is specified but unknown (maybe a typo or something like 'object')
