@@ -33,6 +33,14 @@ use TYPO3\CMS\Frontend\Page\PageRepository;
 abstract class AbstractModel
 {
     /**
+     * Possible cache types which can be set, read and cleared.
+     *
+     * @var string
+     */
+    protected const CACHE_TYPE_RECORD = 'record';
+    protected const CACHE_TYPE_FILE = 'file';
+
+    /**
      * Database table name this model is associated with.
      *
      * @var string
@@ -153,6 +161,13 @@ abstract class AbstractModel
      * @var PageRepository
      */
     private $pageRepository;
+
+    /**
+     * Temporary caches all files and inline records read.
+     *
+     * @var array
+     */
+    private $cache = [];
 
     /**
      * Checks if the specified attribute name is already defined.
@@ -698,18 +713,95 @@ abstract class AbstractModel
      * Returns all inline records of the specified class name (::class) attached to this record.
      *
      * @param string $childClassName
+     * @param bool   $force optional flag to force reading from database and avoid caching (default false)
      *
      * @return array
      */
-    public function getInlineRecords(string $childClassName): array
+    public function getInlineRecords(string $childClassName, bool $force = false): array
     {
-        /** @var self $childClassName */
-        return $childClassName::findAllBy(
-            [
-                'parent_id' => $this->getKey(),
-                'parent_table' => $this->getTableName(),
-            ]
-        );
+        $cache = $this->getCache(self::CACHE_TYPE_RECORD, $childClassName);
+
+        if (null === $cache || $force) {
+            /** @var self $childClassName */
+            $cache = $childClassName::findAllBy(
+                [
+                    'parent_id' => $this->getKey(),
+                    'parent_table' => $this->getTableName(),
+                ]
+            );
+
+            $this->setCache(self::CACHE_TYPE_RECORD, $childClassName, $cache);
+        }
+
+        return $cache;
+    }
+
+    /**
+     * Stores the specified key-value in the local cache.
+     *
+     * @param string $type  cache type ('record' or 'file')
+     * @param string $key   cache key
+     * @param mixed  $value any value of any type
+     */
+    protected function setCache(string $type, string $key, $value)
+    {
+        if (!\array_key_exists($type, $this->cache)) {
+            $this->cache[$type] = [];
+        }
+
+        $this->cache[$type][$key] = $value;
+    }
+
+    /**
+     * Returns the cached value for the specified type and key or the fallback if not cached yet.
+     *
+     * @param string     $type     cache type ('record' or 'file')
+     * @param string     $key      cache key
+     * @param mixed|null $fallback fallback value if cache is unset
+     *
+     * @return mixed
+     */
+    protected function getCache(string $type, string $key, $fallback = null)
+    {
+        if (!\array_key_exists($type, $this->cache) || !\array_key_exists($key, $this->cache[$type])) {
+            return $fallback;
+        }
+
+        return $this->cache[$type][$key];
+    }
+
+    /**
+     * Clears either the entire cache or only a specified type of specific type/key combination from the cache.
+     *
+     * @param string $type optional type to clear only this cache type (default empty string = entire cache)
+     * @param string $key  optional key to clear only this key inside the specified cache type
+     */
+    protected function clearCache(string $type = '', string $key = '')
+    {
+        // clear the entire cache if no type is specified
+        if ('' === $type) {
+            $this->cache = [];
+            return;
+        }
+
+        // do nothing if the type is unknown (maybe already cleared earlier)
+        if (!\array_key_exists($type, $this->cache)) {
+            return;
+        }
+
+        // clear all keys of the specified type if no key is specified
+        if ('' === $key) {
+            $this->cache[$type] = [];
+            return;
+        }
+
+        // do nothing if the key is unknown (maybe already cleared earlier)
+        if (!\array_key_exists($key, $this->cache[$type])) {
+            return;
+        }
+
+        // clear the specified key
+        unset($this->cache[$type][$key]);
     }
 
     /**
@@ -855,14 +947,22 @@ abstract class AbstractModel
      * Returns all files associated to the specified model's attribute / column name.
      *
      * @param string $columnName
+     * @param bool   $force optional flag to force reading from database and avoid caching (default false)
      *
      * @return array|FileReference[]
      */
-    public function resolveFiles(string $columnName): array
+    public function resolveFiles(string $columnName, bool $force = false): array
     {
-        $files = $this->getFileRepository()->findByRelation($this->getTableName(), $columnName, $this->getKey());
+        $cache = $this->getCache(self::CACHE_TYPE_FILE, $columnName);
 
-        return \is_array($files) && \count($files) ? $files : [];
+        if (null === $cache || $force) {
+            $files = $this->getFileRepository()->findByRelation($this->getTableName(), $columnName, $this->getKey());
+            $cache = \is_array($files) && \count($files) ? $files : [];
+
+            $this->setCache(self::CACHE_TYPE_FILE, $columnName, $cache);
+        }
+
+        return $cache;
     }
 
     /**
