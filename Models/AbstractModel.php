@@ -1081,6 +1081,10 @@ abstract class AbstractModel
             case 'bool':
             case 'boolean':
                 return (bool) $value;
+            case 'file':
+                return $this->resolveFile($lowerCaseAttribute);
+            case 'files':
+                return $this->resolveFiles($lowerCaseAttribute);
         }
 
         // type cast is specified but unknown (maybe a typo or something like 'object')
