@@ -929,6 +929,38 @@ abstract class AbstractModel
     }
 
     /**
+     * Returns multiple records each fetched by its unique identifier.
+     * The result is sorted the same order as the specified keys.
+     *
+     * @param array $keys collection of unique identifiers to fetch multiple records
+     *
+     * @return array|static[]
+     */
+    public static function findMultiple(array $keys): array
+    {
+        $dummy = new static();
+
+        $where = [
+            $dummy->getKeyColumnName() => ['in', $keys],
+        ];
+
+        $models = self::findAllBy($where);
+        $sortedModels = [];
+
+        foreach ($keys as $key) {
+            foreach ($models as $index => $model) {
+                if ((int) $key === $model->getKey()) {
+                    $sortedModels[] = $model;
+                    unset($models[$index]);
+                    break;
+                }
+            }
+        }
+
+        return $sortedModels;
+    }
+
+    /**
      * Injects the specified array into a new model.
      *
      * @param array $data
