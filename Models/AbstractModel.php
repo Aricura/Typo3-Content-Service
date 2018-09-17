@@ -101,6 +101,23 @@ abstract class AbstractModel
     protected $languageIndexColumnName = 'sys_language_uid';
 
     /**
+     * Column name where the sort index of the model is stored in.
+     * This information may be empty to use the default sort order of the select query.
+     * Default set to 'sorting'.
+     *
+     * @var string
+     */
+    protected $sortColumnName = 'sorting';
+
+    /**
+     * Sort order of all select queries.
+     * Either ASC or DESC are allowed. Default set to 'ASC'.
+     *
+     * @var string
+     */
+    protected $sortOrder = 'ASC';
+
+    /**
      * Collection of all column names which can be written into the database.
      * If this information is empty all existing model attributes will be stored in the database.
      * Core information (key, parent, created at, updated at) are automatically stored and must not be defined here.
@@ -814,12 +831,10 @@ abstract class AbstractModel
      * @param string $conjunction optional conjunction when using multiple key-value-pairs (default 'AND')
      * @param int    $offset      optional define an offset as starting index (default 0 = start at the first record)
      * @param int    $limit       optional limit the number of records (default -1 = no limitation)
-     * @param string $sortBy      optional column to sort the results by (default 'sorting' column)
-     * @param string $sortOrder   optional sort order, either ASC or DESC (default ASC)
      *
      * @return array|static[]
      */
-    public static function findAllBy(array $where, string $conjunction = 'AND', $offset = 0, $limit = -1, $sortBy = 'sorting', $sortOrder = 'ASC'): array
+    public static function findAllBy(array $where, string $conjunction = 'AND', $offset = 0, $limit = -1): array
     {
         // unify the conjunction string
         $conjunction = \mb_strtoupper(\trim($conjunction));
@@ -873,8 +888,8 @@ abstract class AbstractModel
             $builder->setMaxResults($limit);
         }
 
-        if ('' !== $sortBy) {
-            $builder->orderBy($sortBy, $sortOrder);
+        if ('' !== $dummy->sortColumnName && '' !== $dummy->sortOrder) {
+            $builder->orderBy($dummy->sortColumnName, $dummy->sortOrder);
         }
 
         // fetch all table rows matching the specified query and map them to an instance of this model
@@ -891,6 +906,16 @@ abstract class AbstractModel
     public static function getAll(): array
     {
         return self::findAllBy([]);
+    }
+
+    /**
+     * Helper method.
+     *
+     * @return array
+     */
+    public static function all(): array
+    {
+        return self::getAll();
     }
 
     /**
