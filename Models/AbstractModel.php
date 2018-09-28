@@ -736,7 +736,7 @@ abstract class AbstractModel
      */
     public function getInlineRecords(string $childClassName, bool $force = false): array
     {
-        $cache = $this->getCache(self::CACHE_TYPE_RECORD, $childClassName);
+        $cache = $this->getCache(static::CACHE_TYPE_RECORD, $childClassName);
 
         if (null === $cache || $force) {
             /** @var self $childClassName */
@@ -747,7 +747,7 @@ abstract class AbstractModel
                 ]
             );
 
-            $this->setCache(self::CACHE_TYPE_RECORD, $childClassName, $cache);
+            $this->setCache(static::CACHE_TYPE_RECORD, $childClassName, $cache);
         }
 
         return $cache;
@@ -895,7 +895,7 @@ abstract class AbstractModel
         // fetch all table rows matching the specified query and map them to an instance of this model
         $rows = $builder->execute()->fetchAll();
 
-        return self::mapArraysToModels($rows);
+        return static::mapArraysToModels($rows);
     }
 
     /**
@@ -905,7 +905,7 @@ abstract class AbstractModel
      */
     public static function getAll(): array
     {
-        return self::findAllBy([]);
+        return static::findAllBy([]);
     }
 
     /**
@@ -915,7 +915,25 @@ abstract class AbstractModel
      */
     public static function all(): array
     {
-        return self::getAll();
+        return static::getAll();
+    }
+
+    /**
+     * Returns the first record found which matches the specified column-value combination or a new instance if nothing
+     * was found.
+     *
+     * @param array  $where       collection of all column names and their values used as where statement to filter the
+     *                            query the value may be an array to specify the expression operator (operator =>
+     *                            value), default operator: equals
+     * @param string $conjunction optional conjunction when using multiple key-value-pairs (default 'AND')
+     *
+     * @return static
+     */
+    public static function findBy(array $where, string $conjunction = 'AND')
+    {
+        $models = static::findAllBy($where, $conjunction, 0, 1);
+
+        return \count($models) ? $models[0] : new static();
     }
 
     /**
@@ -928,15 +946,13 @@ abstract class AbstractModel
      *
      * @return static
      */
-    public static function findBy(string $columnName, $value, string $operator = 'eq')
+    public static function findByColumn(string $columnName, $value, string $operator = 'eq')
     {
         $where = [
             $columnName => [$operator, $value],
         ];
 
-        $models = self::findAllBy($where, 'AND', 0, 1);
-
-        return \count($models) ? $models[0] : new static();
+        return static::findBy($where);
     }
 
     /**
@@ -950,7 +966,7 @@ abstract class AbstractModel
     {
         $dummy = new static();
 
-        return self::findBy($dummy->getKeyColumnName(), $key);
+        return static::findByColumn($dummy->getKeyColumnName(), $key);
     }
 
     /**
@@ -969,7 +985,7 @@ abstract class AbstractModel
             $dummy->getKeyColumnName() => ['in', $keys],
         ];
 
-        $models = self::findAllBy($where);
+        $models = static::findAllBy($where);
         $sortedModels = [];
 
         foreach ($keys as $key) {
@@ -994,7 +1010,7 @@ abstract class AbstractModel
      */
     public static function inject(array $data)
     {
-        $model = self::mapArrayToModel($data);
+        $model = static::mapArrayToModel($data);
         $model->exists = $model->getKey() > 0;
 
         return $model;
@@ -1010,13 +1026,13 @@ abstract class AbstractModel
      */
     public function resolveFiles(string $columnName, bool $force = false): array
     {
-        $cache = $this->getCache(self::CACHE_TYPE_FILE, $columnName);
+        $cache = $this->getCache(static::CACHE_TYPE_FILE, $columnName);
 
         if (null === $cache || $force) {
             $files = $this->getFileRepository()->findByRelation($this->getTableName(), $columnName, $this->getKey());
             $cache = \is_array($files) && \count($files) ? $files : [];
 
-            $this->setCache(self::CACHE_TYPE_FILE, $columnName, $cache);
+            $this->setCache(static::CACHE_TYPE_FILE, $columnName, $cache);
         }
 
         return $cache;
@@ -1055,7 +1071,7 @@ abstract class AbstractModel
             ->getRecordOverlay($this->getTableName(), $this->toArray(), $targetLanguageIndex)
         ;
 
-        return self::mapArrayToModel($translatedRecord);
+        return static::mapArrayToModel($translatedRecord);
     }
 
     /**
@@ -1087,7 +1103,7 @@ abstract class AbstractModel
         $models = [];
 
         foreach ($records as $record) {
-            $models[] = self::mapArrayToModel($record);
+            $models[] = static::mapArrayToModel($record);
         }
 
         return $models;
